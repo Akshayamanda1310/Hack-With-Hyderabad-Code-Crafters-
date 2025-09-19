@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFO HELPER - Bringing Clarity to Complexity</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+
+        .logo::before {
+            content: "📊";
+            margin-right: 10px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .mode-selector {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+        }
+
+        .export-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .start-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+        }
+
+        .dashboard {
+            display: none;
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 5px;
+        }
+
+        .metric-change {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .controls-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .charts-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .chart-container.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .control-value {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .slider-container {
+            position: relative;
+            margin: 15px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .usage-stats {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .usage-title {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .usage-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero-title {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">CFO Helper</div>
+        <div class="header-controls">
+            <select class="mode-selector">
+                <option>Startup/Business Mode</option>
+                <option>Enterprise Mode</option>
+            </select>
+            <select class="mode-selector">
+                <option>INR (₹)</option>
+                <option>USD ($)</option>
+            </select>
+            <button class="export-btn" onclick="exportPDF()">
+                📄 Export PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="hero-section" id="heroSection">
+        <h1 class="hero-title">CFO HELPER </h1>
+        <p class="hero-subtitle">
+              Bringing Clarity to Complexity
+        </p>
+        <button class="start-btn" onclick="startSimulation()">
+            🚀 Start Simulation
+        </button>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <!-- Metrics Row -->
+        <div class="metrics-row">
+            <div class="metric-card">
+                <div class="metric-title">Monthly Revenue</div>
+                <div class="metric-value" id="revenueValue">₹8,50,000</div>
+                <div class="metric-change positive">+15% ↗</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Operating Expenses</div>
+                <div class="metric-value" id="expensesValue">₹6,20,000</div>
+                <div class="metric-change positive">+8% ↗</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Net Profit</div>
+                <div class="metric-value" id="profitValue">₹2,30,000</div>
+                <div class="metric-change positive">+22% ↗</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Runway (Months)</div>
+                <div class="metric-value" id="runwayValue">₹18</div>
+                <div class="metric-change negative">-2% ↘</div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Controls Panel -->
+            <div class="controls-panel">
+                <h3 class="section-title">Scenario Parameters</h3>
+                <p style="color: #6b7280; margin-bottom: 20px;">Adjust the sliders to simulate different financial scenarios</p>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        Monthly Revenue <span class="control-value" id="revenueSliderValue">₹550,000</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" min="100000" max="10000000" value="550000" class="slider" id="revenueSlider">
+                        <div class="slider-labels">
+                            <span>₹100,000</span>
+                            <span>₹10,000,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        Monthly Salaries <span class="control-value" id="salariesSliderValue">₹300,000</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" min="50000" max="5000000" value="300000" class="slider" id="salariesSlider">
+                        <div class="slider-labels">
+                            <span>₹50,000</span>
+                            <span>₹5,000,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        Marketing Budget <span class="control-value" id="marketingSliderValue">₹100,000</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" min="10000" max="1000000" value="100000" class="slider" id="marketingSlider">
+                        <div class="slider-labels">
+                            <span>₹10,000</span>
+                            <span>₹1,000,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        Runway (Months) <span class="control-value" id="runwaySliderValue">18 months</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" min="6" max="60" value="18" class="slider" id="runwaySlider">
+                        <div class="slider-labels">
+                            <span>6 months</span>
+                            <span>60 months</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="usage-stats">
+                    <div class="usage-title">Usage Statistics</div>
+                    <div class="usage-count">127</div>
+                    <div style="font-size: 12px; color: #6b7280;">Simulations run this month</div>
+                    <button style="background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; margin-top: 5px;">
+                        📊 View Analytics
+                    </button>
+                </div>
+            </div>
+
+            <!-- Charts Panel -->
+            <div class="charts-panel">
+                <!-- Balance Trend Chart -->
+                <div class="chart-container">
+                    <div class="chart-title">Balance Trend</div>
+                    <canvas id="balanceChart" width="400" height="300"></canvas>
+                </div>
+
+                <!-- Income vs Expenses Chart -->
+                <div class="chart-container">
+                    <div class="chart-title">Income vs Expenses</div>
+                    <canvas id="incomeExpensesChart" width="400" height="300"></canvas>
+                </div>
+
+                <!-- Expense Breakdown Chart -->
+                <div class="chart-container full-width">
+                    <div class="chart-title">Expense Breakdown</div>
+                    <div style="display: flex; align-items: center; gap: 30px;">
+                        <div style="flex: 1;">
+                            <canvas id="expenseChart" width="300" height="300"></canvas>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 12px; height: 12px; background: #2563eb; border-radius: 50%;"></div>
+                                    <span>Salaries</span>
+                                    <span style="margin-left: auto; font-weight: 600;">40%</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 12px; height: 12px; background: #3b82f6; border-radius: 50%;"></div>
+                                    <span>Marketing</span>
+                                    <span style="margin-left: auto; font-weight: 600;">20%</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
+                                    <span>Operations</span>
+                                    <span style="margin-left: auto; font-weight: 600;">25%</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%;"></div>
+                                    <span>R&D</span>
+                                    <span style="margin-left: auto; font-weight: 600;">10%</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 12px; height: 12px; background: #6b7280; border-radius: 50%;"></div>
+                                    <span>Others</span>
+                                    <span style="margin-left: auto; font-weight: 600;">5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let balanceChart, incomeExpensesChart, expenseChart;
+
+        // Format currency
+        function formatCurrency(value) {
+            return '₹' + value.toLocaleString('en-IN');
+        }
+
+        // Start simulation
+        function startSimulation() {
+            document.getElementById('heroSection').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            initializeCharts();
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Balance Trend Chart
+            const balanceCtx = document.getElementById('balanceChart').getContext('2d');
+            balanceChart = new Chart(balanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        data: [450000, 520000, 480000, 600000, 620000, 650000],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Income vs Expenses Chart
+            const incomeExpensesCtx = document.getElementById('incomeExpensesChart').getContext('2d');
+            incomeExpensesChart = new Chart(incomeExpensesCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Income',
+                        data: [750000, 800000, 750000, 850000, 900000, 850000],
+                        backgroundColor: '#10b981'
+                    }, {
+                        label: 'Expenses',
+                        data: [650000, 620000, 580000, 620000, 580000, 620000],
+                        backgroundColor: '#ef4444'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Expense Breakdown Chart
+            const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+            expenseChart = new Chart(expenseCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Salaries', 'Marketing', 'Operations', 'R&D', 'Others'],
+                    datasets: [{
+                        data: [40, 20, 25, 10, 5],
+                        backgroundColor: ['#2563eb', '#3b82f6', '#10b981', '#22c55e', '#6b7280']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { 
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            const revenue = parseInt(document.getElementById('revenueSlider').value);
+            const salaries = parseInt(document.getElementById('salariesSlider').value);
+            const marketing = parseInt(document.getElementById('marketingSlider').value);
+            const runway = parseInt(document.getElementById('runwaySlider').value);
+
+            const totalExpenses = salaries + marketing + 200000; // Base expenses
+            const profit = revenue - totalExpenses;
+
+            document.getElementById('revenueValue').textContent = formatCurrency(revenue);
+            document.getElementById('expensesValue').textContent = formatCurrency(totalExpenses);
+            document.getElementById('profitValue').textContent = formatCurrency(profit);
+            document.getElementById('runwayValue').textContent = runway;
+
+            // Update profit color
+            const profitElement = document.getElementById('profitValue');
+            profitElement.parentElement.querySelector('.metric-change').className = 
+                profit > 0 ? 'metric-change positive' : 'metric-change negative';
+        }
+
+        // Slider event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliders = [
+                { slider: 'revenueSlider', display: 'revenueSliderValue', format: 'currency' },
+                { slider: 'salariesSlider', display: 'salariesSliderValue', format: 'currency' },
+                { slider: 'marketingSlider', display: 'marketingSliderValue', format: 'currency' },
+                { slider: 'runwaySlider', display: 'runwaySliderValue', format: 'months' }
+            ];
+
+            sliders.forEach(config => {
+                const slider = document.getElementById(config.slider);
+                const display = document.getElementById(config.display);
+                
+                slider.addEventListener('input', function() {
+                    const value = parseInt(this.value);
+                    if (config.format === 'currency') {
+                        display.textContent = formatCurrency(value);
+                    } else {
+                        display.textContent = value + ' months';
+                    }
+                    updateMetrics();
+                });
+            });
+        });
+
+        // Export PDF function
+        function exportPDF() {
+            alert('PDF export functionality would integrate with your backend API!');
+        }
+
+        // Simulate usage counter
+        let simulationCount = 127;
+        setInterval(() => {
+            simulationCount++;
+            document.querySelector('.usage-count').textContent = simulationCount;
+        }, 30000);
+    </script>
+</body>
+</html>
